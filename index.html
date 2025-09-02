@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vectramind Email Campaign Manager</title>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh}
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    .logo-section{text-align:center;background:#fff;padding:40px;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,.1);margin-bottom:30px}
+    .logo{width:80px;height:80px;background:linear-gradient(45deg,#667eea,#764ba2);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:700}
+    .company-name{font-size:28px;font-weight:700;color:#333;margin-bottom:10px}
+    .tagline{color:#666;font-size:16px}
+    .main-content{background:#fff;border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
+    .nav-tabs{display:flex;border-bottom:2px solid #f0f0f0;margin-bottom:30px;gap:8px;flex-wrap:wrap}
+    .nav-tab{padding:12px 18px;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-size:15px;font-weight:600;color:#666;border-radius:8px 8px 0 0}
+    .nav-tab.active{color:#667eea;border-bottom-color:#667eea}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .form-group{margin-bottom:22px}
+    .form-label{display:block;margin-bottom:8px;font-weight:600;color:#333}
+    .form-input{width:100%;padding:12px 16px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px}
+    .form-input:focus{outline:none;border-color:#667eea}
+    .btn{padding:12px 20px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;margin-right:10px;margin-bottom:10px}
+    .btn-primary{background:linear-gradient(45deg,#667eea,#764ba2);color:#fff}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(102,126,234,.28)}
+    .btn-secondary{background:#f8f9fa;color:#333;border:2px solid #e0e0e0}
+    .btn-secondary:hover{background:#eef1f5}
+    .btn-success{background:#28a745;color:#fff}
+    .btn-warning{background:#ffc107;color:#333}
+    .btn-danger{background:#dc3545;color:#fff}
+    .upload-area{border:2px dashed #667eea;border-radius:10px;padding:36px;text-align:center;background:#f8f9ff;cursor:pointer}
+    .upload-area:hover{background:#f0f4ff}
+    .upload-icon{font-size:44px;color:#667eea;margin-bottom:12px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:30px}
+    .stat-card{background:linear-gradient(45deg,#667eea,#764ba2);color:#fff;padding:22px;border-radius:15px;text-align:center}
+    .stat-number{font-size:30px;font-weight:700;margin-bottom:6px}
+    .stat-label{font-size:14px;opacity:.9}
+    .email-template{border:2px solid #e0e0e0;border-radius:10px;padding:18px;margin:16px 0;background:#f9f9f9;max-height:350px;overflow:auto}
+    .progress-bar{width:100%;height:18px;background:#eaeaea;border-radius:10px;overflow:hidden;margin:8px 0}
+    .progress-fill{height:100%;background:linear-gradient(45deg,#667eea,#764ba2);transition:width .25s ease}
+    .chart-container{background:#fff;padding:18px;border-radius:10px;margin:18px 0;box-shadow:0 5px 15px rgba(0,0,0,.06)}
+    .validation-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:16px 0}
+    .validation-card{padding:18px;border-radius:10px;text-align:center}
+    .valid-emails{background:#d4edda;color:#155724}
+    .invalid-emails{background:#f8d7da;color:#721c24}
+    .bounce-emails{background:#fff3cd;color:#856404}
+    .campaign-status{padding:14px;border-radius:10px;margin:12px 0;font-weight:600}
+    .status-scheduled{background:#cce5ff;color:#004085}
+    .status-executing{background:#fff3cd;color:#856404}
+    .status-completed{background:#d4edda;color:#155724}
+    .hidden{display:none}
+    .file-info{background:#f8f9fa;padding:12px;border-radius:8px;margin:8px 0;border-left:4px solid #667eea}
+    .campaign-list{background:#f8f9fa;border-radius:10px;padding:18px;margin:16px 0}
+    .campaign-item{background:#fff;padding:14px;border-radius:8px;margin:10px 0;border-left:4px solid #667eea;display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .muted{color:#666;font-size:13px}
+    .pill{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .pill-now{background:#e7f7ef;color:#0f5132}
+    .pill-scheduled{background:#e7f1ff;color:#0b3d91}
+    .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .nowrap{white-space:nowrap}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="logo-section">
+      <div class="logo">VM</div>
+      <div class="company-name">Vectramind Technology Private Limited</div>
+      <div class="tagline">Advanced Email Campaign Management Solution</div>
+    </div>
+
+    <div class="main-content">
+      <!-- Tabs -->
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('validation', event)">Email Validation</button>
+        <button class="nav-tab" onclick="showTab('campaign', event)">Campaign Manager</button>
+        <button class="nav-tab" onclick="showTab('analytics', event)">Analytics & Reports</button>
+      </div>
+
+      <!-- Validation -->
+      <div id="validation" class="tab-content active">
+        <h2 style="margin-bottom:20px;color:#333;">Email Validation & Sorting</h2>
+
+        <div class="form-group">
+          <label class="form-label">Upload Email List</label>
+          <div class="upload-area" onclick="document.getElementById('emailFile').click()">
+            <div class="upload-icon">📧</div>
+            <div>Click to upload CSV or Excel (.csv, .xlsx, .xls)</div>
+            <div class="muted" style="margin-top:8px;">Supports up to 50,000 rows</div>
+          </div>
+          <input type="file" id="emailFile" accept=".csv,.xlsx,.xls" style="display:none" />
+        </div>
+
+        <div id="validationResults" class="hidden">
+          <h3 style="margin:18px 0 12px;color:#333;">Validation Results</h3>
+          <div class="validation-results">
+            <div class="validation-card valid-emails">
+              <div class="stat-number" id="validCount">0</div>
+              <div class="stat-label">Valid Emails</div>
+            </div>
+            <div class="validation-card invalid-emails">
+              <div class="stat-number" id="invalidCount">0</div>
+              <div class="stat-label">Invalid Emails</div>
+            </div>
+            <div class="validation-card bounce-emails">
+              <div class="stat-number" id="bounceCount">0</div>
+              <div class="stat-label">Potential Bounces</div>
+            </div>
+          </div>
+          <div style="text-align:center;margin:16px 0;">
+            <button class="btn btn-primary" onclick="downloadValidated('valid')">Download Valid</button>
+            <button class="btn btn-secondary" onclick="downloadValidated('invalid')">Download Invalid</button>
+            <button class="btn btn-warning" onclick="downloadValidated('bounce')">Download Bounce</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign -->
+      <div id="campaign" class="tab-content">
+        <h2 style="margin-bottom:20px;color:#333;">Email Campaign Manager</h2>
+
+        <div class="form-group">
+          <label class="form-label">Upload HTML Template</label>
+          <div class="upload-area" onclick="document.getElementById('htmlFile').click()">
+            <div class="upload-icon">📄</div>
+            <div>Click to upload HTML template</div>
+          </div>
+          <input type="file" id="htmlFile" accept=".html,.htm" style="display:none" />
+        </div>
+
+        <div id="templatePreview" class="hidden">
+          <h3 style="margin:18px 0 10px;color:#333;">Template Preview</h3>
+          <div class="email-template" id="templateDisplay"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Campaign Name / Batch Name *</label>
+          <input type="text" class="form-input" id="campaignName" placeholder="Enter campaign name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Subject *</label>
+          <input type="text" class="form-input" id="emailSubject" placeholder="Enter email subject" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Upload Email Recipients</label>
+          <div class="upload-area" onclick="document.getElementById('recipientFile').click()">
+            <div class="upload-icon">👥</div>
+            <div>Click to upload recipient list (CSV/Excel)</div>
+          </div>
+          <input type="file" id="recipientFile" accept=".csv,.xlsx,.xls" style="display:none" />
+        </div>
+
+        <div id="recipientInfo" class="hidden">
+          <div class="file-info">
+            <strong>Recipients Loaded:</strong> <span id="recipientCount">0</span> emails
+            <span class="muted"> (duplicates removed, invalid ignored)</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Campaign Type</label>
+          <div>
+            <label style="margin-right:18px;"><input type="radio" name="campaignType" value="bulk" checked/> Bulk Campaign</label>
+            <label><input type="radio" name="campaignType" value="custom"/> Custom Campaign</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Schedule Options</label>
+          <div>
+            <label style="margin-right:18px;"><input type="radio" name="scheduleType" value="now" checked/> Execute Now</label>
+            <label><input type="radio" name="scheduleType" value="schedule"/> Schedule Campaign</label>
+          </div>
+        </div>
+
+        <div id="scheduleDateTime" class="form-group hidden">
+          <label class="form-label">Schedule Date & Time</label>
+          <input type="datetime-local" class="form-input" id="scheduleTime" />
+        </div>
+
+        <div style="text-align:center;margin:20px 0;">
+          <button class="btn btn-success" id="launchBtn">Launch Campaign</button>
+          <button class="btn btn-secondary" id="saveDraftBtn">Save as Draft</button>
+        </div>
+
+        <div id="campaignStatus" class="hidden">
+          <div class="campaign-status status-executing">
+            <div>Campaign Status: <span id="statusText">Preparing...</span></div>
+            <div class="progress-bar"><div class="progress-fill" id="campaignProgress" style="width:0%"></div></div>
+            <div class="muted"><span id="sentCount">0</span> of <span id="totalCount">0</span> emails sent</div>
+          </div>
+        </div>
+
+        <div class="campaign-list">
+          <h3 style="margin-bottom:10px;color:#333;">Recent Campaigns</h3>
+          <div id="campaignHistory"></div>
+        </div>
+      </div>
+
+      <!-- Analytics -->
+      <div id="analytics" class="tab-content">
+        <h2 style="margin-bottom:20px;color:#333;">Campaign Analytics & Reports</h2>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number" id="deliveryRate">0%</div><div class="stat-label">Delivery Rate</div></div>
+          <div class="stat-card"><div class="stat-number" id="openRate">0%</div><div class="stat-label">Open Rate</div></div>
+          <div class="stat-card"><div class="stat-number" id="hardBounces">0</div><div class="stat-label">Hard Bounces</div></div>
+          <div class="stat-card"><div class="stat-number" id="softBounces">0</div><div class="stat-label">Soft Bounces</div></div>
+        </div>
+
+        <div class="chart-container">
+          <h3 style="margin-bottom:12px;color:#333;">Campaign Performance</h3>
+          <canvas id="performanceChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="chart-container">
+          <h3 style="margin-bottom:12px;color:#333;">Email Status Distribution</h3>
+          <canvas id="statusChart" width="400" height="200"></canvas>
+        </div>
+
+        <div style="text-align:center;margin:18px 0;">
+          <button class="btn btn-primary" onclick="downloadReport('summary')">Download Summary Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+	// Launch Campaign
+	$('launchBtn').onclick = () => {
+ 		 if (!state.currentCampaign) {
+   			 alert("Please select or create a campaign first");
+   		 return;
+  	}
+
+  	const c = state.currentCampaign;
+ 	 // ask user which mode: Email or SMS
+ 	 const mode = confirm("Send this campaign as EMAIL?\n(Click Cancel to send as SMS)") 
+  	             ? "email" 
+               : "sms";
+
+ 	 runSendReal(c, mode);
+	};
+
+	async function runSendReal(campaign, mode) {
+  		$('campaignStatus').classList.remove('hidden');
+  		$('statusText').textContent = 'Sending...';
+  		$('totalCount').textContent = fmt(campaign.recipientsCount);
+
+ 	 try {
+   		 const res = await fetch("http://localhost:3000/send-campaign", {
+     		 method: "POST",
+     		 headers: { "Content-Type": "application/json" },
+     		 body: JSON.stringify({
+      		  type: mode,                             // "email" or "sms"
+        		subject: campaign.subject,
+        		html: state.templateHtml,
+       		 smsBody: "This is an SMS campaign test", // replace or make user input
+       		 recipients: state.recipients
+     	 })
+    	});
+
+    		const result = await res.json();
+    		if (result.success) {
+     			 $('statusText').textContent = 'Completed';
+      			 $('sentCount').textContent = fmt(result.sent);
+      			 $('campaignProgress').style.width = '100%';
+      			updateCampaign(campaign.id, { status: 'Completed' });
+      			renderCampaignHistory();
+   	 	} else {
+     			 $('statusText').textContent = 'Failed';
+     		 alert("Error: " + result.error);
+    	}
+  	} catch (err) {
+   	 console.error(err);
+   			 $('statusText').textContent = 'Error';
+   		 alert("Sending failed: " + err.message);
+ 	 }
+	}
+
+
+    /* ---------------- State ---------------- */
+    const state = {
+      validated: { valid: [], invalid: [], bounce: [] },
+      recipients: [],
+      templateHtml: '',
+      campaigns: JSON.parse(localStorage.getItem('vm_campaigns') || '[]') // persisted
+    };
+
+    /* -------------- Utilities -------------- */
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    const knownGoodDomains = new Set([
+      'gmail.com','outlook.com','hotmail.com','yahoo.com','icloud.com','live.com',
+      'proton.me','protonmail.com','aol.com','msn.com','comcast.net','att.net',
+      'vectramind.com','googlemail.com','yandex.com','zoho.com'
+    ]);
+
+    const $ = (id)=>document.getElementById(id);
+    const fmt = (n)=>Number(n).toLocaleString();
+
+    function classifyEmails(emailList){
+      const seen = new Set();
+      const result = { valid: [], invalid: [], bounce: [] };
+
+      for (let raw of emailList){
+        if (!raw) continue;
+        const e = String(raw).trim().toLowerCase();
+        if (!e || seen.has(e)) continue;
+        seen.add(e);
+
+        if (!emailRegex.test(e)) { result.invalid.push(e); continue; }
+
+        const domain = e.split('@')[1] || '';
+        if (!knownGoodDomains.has(domain)) {
+          result.bounce.push(e); // “potential” bounce (unknown domain)
+        } else {
+          result.valid.push(e);
+        }
+      }
+      return result;
+    }
+
+    function rowsToEmailArray(rows){
+      const out = [];
+      for (const row of rows){
+        if (row && typeof row === 'object'){
+          for (const key of Object.keys(row)){
+            const v = row[key];
+            if (typeof v === 'string' && v.includes('@')) out.push(v);
+          }
+        } else if (Array.isArray(row)){
+          for (const v of row) if (typeof v === 'string' && v.includes('@')) out.push(v);
+        } else if (typeof row === 'string' && row.includes('@')){
+          out.push(row);
+        }
+      }
+      return out;
+    }
+
+    function downloadText(filename, text, mime='text/plain'){
+      const blob = new Blob([text], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvFromList(list){
+      return 'email\n' + list.map(e => `"${e.replace(/"/g,'""')}"`).join('\n');
+    }
+
+    function ensureMax(list, max=50000){
+      return list.slice(0, max);
+    }
+
+    /* -------- File Parsing (CSV/XLSX) ------ */
+    function parseCSVFile(file){
+      return new Promise((resolve, reject)=>{
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (res)=> resolve(rowsToEmailArray(res.data)),
+          error: reject
+        });
+      });
+    }
+
+    function parseExcelFile(file){
+      return new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onload = (e)=>{
+          try{
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: 'array' });
+            const first = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(first, { defval: '' });
+            resolve(rowsToEmailArray(json));
+          }catch(err){ reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function parseEmailsFromFile(file){
+      const name = (file?.name || '').toLowerCase();
+      if (name.endsWith('.csv')) {
+        return await parseCSVFile(file);
+      }
+      if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+        return await parseExcelFile(file);
+      }
+      throw new Error('Unsupported file type. Use CSV or Excel.');
+    }
+
+    /* -------------- Tabs / Charts ---------- */
+    let performanceChart, statusChart;
+
+    function showTab(tabName, e){
+      document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      if (e && e.target) e.target.classList.add('active');
+      if (tabName==='analytics') setTimeout(renderAnalytics, 80);
+    }
+
+    function renderAnalytics(){
+      const last = state.campaigns.slice(-1)[0];
+      const delivered = last?.metrics?.delivered ?? 0;
+      const sent = last?.metrics?.sent ?? 0;
+      const opened = last?.metrics?.opened ?? 0;
+      const hardB = last?.metrics?.hardBounces ?? 0;
+      const softB = last?.metrics?.softBounces ?? 0;
+
+      const deliveryRate = sent ? Math.round((delivered/sent)*100) : 0;
+      const openRate = delivered ? Math.round((opened/delivered)*100) : 0;
+
+      $('deliveryRate').textContent = deliveryRate + '%';
+      $('openRate').textContent = openRate + '%';
+      $('hardBounces').textContent = fmt(hardB);
+      $('softBounces').textContent = fmt(softB);
+
+      // Performance (opens by last 7 campaigns)
+      const labels = state.campaigns.slice(-7).map(c=>c.name);
+      const opens = state.campaigns.slice(-7).map(c=>c.metrics?.opened ?? 0);
+      const ctx1 = document.getElementById('performanceChart').getContext('2d');
+      if (performanceChart) performanceChart.destroy();
+      performanceChart = new Chart(ctx1, {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'Opens', data: opens, borderWidth: 2, tension: .25 }]},
+        options: { responsive: true, plugins:{ legend:{ display:true }}, scales:{ y:{ beginAtZero:true }}}
+      });
+
+      // Status donut (delivered vs bounces vs unopened)
+      const donut = [
+        delivered,
+        hardB + softB,
+        Math.max(delivered - opened, 0)
+      ];
+      const ctx2 = document.getElementById('statusChart').getContext('2d');
+      if (statusChart) statusChart.destroy();
+      statusChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: { labels: ['Delivered','Bounced','Unopened'], datasets: [{ data: donut }]},
+        options: { responsive: true, plugins:{ legend:{ display:true }}}
+      });
+    }
+
+    /* -------- Validation Handlers ---------- */
+    $('emailFile').addEventListener('change', async (ev)=>{
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      try{
+        const emailsRaw = ensureMax(await parseEmailsFromFile(file));
+        const cls = classifyEmails(emailsRaw);
+        state.validated = cls;
+
+        $('validCount').textContent = fmt(cls.valid.length);
+        $('invalidCount').textContent = fmt(cls.invalid.length);
+        $('bounceCount').textContent = fmt(cls.bounce.length);
+        $('validationResults').classList.remove('hidden');
+      }catch(err){
+        console.error(err);
+        alert('Failed to parse file. Please upload CSV or Excel with emails.\n\n' + err.message);
+      }finally{
+        ev.target.value = '';
+      }
+    });
+
+    function downloadValidated(type){
+      const list = state.validated?.[type] || [];
+      if (!list.length) return alert('No '+type+' emails available to download.');
+      downloadText(`${type}_emails.csv`, csvFromList(list), 'text/csv');
+    }
+
+    /* -------- Campaign: Template ------------ */
+    $('htmlFile').addEventListener('change', async (ev)=>{
+      const f = ev.target.files?.[0];
+      if (!f) return;
+      try{
+        const text = await f.text();
+        state.templateHtml = text;
+        $('templateDisplay').innerHTML = text;
+        $('templatePreview').classList.remove('hidden');
+      }catch(err){
+        console.error(err);
+        alert('Could not read HTML file.');
+      }finally{
+        ev.target.value = '';
+      }
+    });
+
+    /* -------- Campaign: Recipients ---------- */
+    $('recipientFile').addEventListener('change', async (ev)=>{
+      const f = ev.target.files?.[0];
+      if (!f) return;
+      try{
+        const emails = ensureMax(await parseEmailsFromFile(f));
+        const cls = classifyEmails(emails);
+        // For sending, we’ll use only valid emails (skip invalid + bounce risk by default)
+        state.recipients = cls.valid;
+        $('recipientCount').textContent = fmt(state.recipients.length);
+        $('recipientInfo').classList.remove('hidden');
+        if (cls.bounce.length) {
+          console.warn('Potential bounce risk emails (excluded by default): ', cls.bounce.length);
+        }
+      }catch(err){
+        console.error(err);
+        alert('Failed to parse recipients file.\n\n' + err.message);
+      }finally{
+        ev.target.value = '';
+      }
+    });
+
+    // Toggle schedule input
+    document.querySelectorAll('input[name="scheduleType"]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        const scheduled = document.querySelector('input[name="scheduleType"]:checked').value === 'schedule';
+        $('scheduleDateTime').classList.toggle('hidden', !scheduled);
+      });
+    });
+
+    /* -------- Campaign: Actions ------------- */
+    $('saveDraftBtn').addEventListener('click', ()=>{
+      const draft = collectCampaignForm();
+      if (!draft.name || !draft.subject){
+        return alert('Please fill Campaign Name and Subject before saving draft.');
+      }
+      draft.status = 'Draft';
+      saveCampaign(draft);
+      renderCampaignHistory();
+      alert('Draft saved.');
+    });
+
+    $('launchBtn').addEventListener('click', ()=>{
+      const c = collectCampaignForm();
+      if (!c.name || !c.subject) return alert('Please provide Campaign Name and Subject.');
+      if (!state.templateHtml) return alert('Please upload an HTML template.');
+      if (!state.recipients.length) return alert('Please upload recipients (valid emails).');
+
+      const scheduleType = c.scheduleType;
+      if (scheduleType === 'schedule'){
+        if (!c.scheduledAt) return alert('Please choose a schedule date & time.');
+        c.status = 'Scheduled';
+        c.metrics = { sent: 0, delivered: 0, opened: 0, hardBounces: 0, softBounces: 0 };
+        saveCampaign(c);
+        renderCampaignHistory();
+        $('campaignStatus').classList.remove('hidden');
+        $('statusText').textContent = 'Scheduled';
+        $('campaignProgress').style.width = '0%';
+        $('sentCount').textContent = '0';
+        $('totalCount').textContent = fmt(c.recipientsCount);
+        alert('Campaign scheduled.');
+      } else {
+        c.status = 'Executing';
+        c.sentAt = new Date().toISOString();
+        c.metrics = { sent: 0, delivered: 0, opened: 0, hardBounces: 0, softBounces: 0 };
+        saveCampaign(c);
+        renderCampaignHistory();
+        runSendSimulation(c.id);
+      }
+    });
+
+    function collectCampaignForm(){
+      const name = $('campaignName').value.trim();
+      const subject = $('emailSubject').value.trim();
+      const type = document.querySelector('input[name="campaignType"]:checked')?.value || 'bulk';
+      const scheduleType = document.querySelector('input[name="scheduleType"]:checked')?.value || 'now';
+      const scheduledAt = scheduleType==='schedule' ? $('scheduleTime').value : null;
+
+      return {
+        id: crypto.randomUUID(),
+        name, subject,
+        type,
+        scheduleType,
+        scheduledAt,
+        recipientsCount: state.recipients.length,
+        templateSize: state.templateHtml.length,
+        metrics: null
+      };
+    }
+
+    function saveCampaign(c){
+      state.campaigns.push(c);
+      localStorage.setItem('vm_campaigns', JSON.stringify(state.campaigns));
+    }
+
+    function updateCampaign(id, patch){
+      const idx = state.campaigns.findIndex(x=>x.id===id);
+      if (idx>=0){
+        state.campaigns[idx] = { ...state.campaigns[idx], ...patch };
+        localStorage.setItem('vm_campaigns', JSON.stringify(state.campaigns));
+      }
+    }
+
+    function renderCampaignHistory(){
+      const root = $('campaignHistory');
+      root.innerHTML = '';
+      const list = [...state.campaigns].reverse();
+      if (!list.length){ root.innerHTML = '<div class="muted">No campaigns yet.</div>'; return; }
+
+      for (const c of list){
+        const pill = c.scheduleType==='schedule' ? '<span class="pill pill-scheduled">Scheduled</span>' :
+                      (c.status==='Completed' ? '<span class="pill pill-now">Completed</span>' :
+                       '<span class="pill pill-now">Now</span>');
+        const when = c.scheduledAt ? new Date(c.scheduledAt).toLocaleString() :
+                    (c.sentAt ? new Date(c.sentAt).toLocaleString() : '-');
+
+        const div = document.createElement('div');
+        div.className = 'campaign-item';
+        div.innerHTML = `
+          <div>
+            <div style="font-weight:700">${c.name}</div>
+            <div class="muted">Subject: ${escapeHtml(c.subject)} • ${c.type.toUpperCase()} • ${fmt(c.recipientsCount)} recipients</div>
+            <div class="muted">When: ${when}</div>
+          </div>
+          <div class="right">
+            ${pill}
+            <button class="btn btn-secondary nowrap" data-id="${c.id}" data-action="summary">Download Summary</button>
+          </div>
+        `;
+        root.appendChild(div);
+      }
+
+      // Wire buttons
+      root.querySelectorAll('button[data-action="summary"]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const id = btn.getAttribute('data-id');
+          downloadReport('summary', id);
+        });
+      });
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    /* -------- Send Simulation (Now) -------- */
+    function runSendSimulation(campaignId){
+      const c = state.campaigns.find(x=>x.id===campaignId);
+      if (!c) return;
+
+      $('campaignStatus').classList.remove('hidden');
+      $('statusText').textContent = 'Sending...';
+      $('totalCount').textContent = fmt(c.recipientsCount);
+
+      const total = c.recipientsCount;
+      let sent = 0;
+
+      const tick = setInterval(()=>{
+        const step = Math.ceil(Math.max(total/50, 1)); // ~50 ticks
+        sent = Math.min(sent + step, total);
+        const pct = Math.round((sent/total)*100);
+        $('campaignProgress').style.width = pct + '%';
+        $('sentCount').textContent = fmt(sent);
+
+        // Update metrics live-ish
+        const hardB = Math.floor(sent * 0.01);
+        const softB = Math.floor(sent * 0.02);
+        const delivered = Math.max(sent - hardB - softB, 0);
+        const opened = Math.floor(delivered * 0.28);
+
+        updateCampaign(campaignId, {
+          metrics: { sent, delivered, opened, hardBounces: hardB, softBounces: softB }
+        });
+
+        if (sent >= total){
+          clearInterval(tick);
+          $('statusText').textContent = 'Completed';
+          const done = state.campaigns.find(x=>x.id===campaignId);
+          updateCampaign(campaignId, { status: 'Completed' });
+          renderCampaignHistory();
+        }
+      }, 100);
+    }
+
+    /* -------------- Reports ---------------- */
+    function downloadReport(mode='summary', specificId=null){
+      let rows = [['Name','Subject','Type','Scheduled','SentAt','Recipients','Delivered','Opened','HardBounces','SoftBounces','DeliveryRate','OpenRate']];
+      const items = specificId ? state.campaigns.filter(c=>c.id===specificId) : state.campaigns;
+      if (!items.length) return alert('No campaigns to export.');
+
+      for (const c of items){
+        const m = c.metrics || {sent:0, delivered:0, opened:0, hardBounces:0, softBounces:0};
+        const deliveryRate = m.sent ? Math.round((m.delivered/m.sent)*100) : 0;
+        const openRate = m.delivered ? Math.round((m.opened/m.delivered)*100) : 0;
+        rows.push([
+          c.name, c.subject, c.type,
+          c.scheduledAt || '',
+          c.sentAt || '',
+          c.recipientsCount,
+          m.delivered, m.opened, m.hardBounces, m.softBounces,
+          deliveryRate+'%', openRate+'%'
+        ]);
+      }
+      const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+      downloadText(`campaign_${mode}_report.csv`, csv, 'text/csv');
+    }
+
+    /* -------------- Init ------------------- */
+    (function init(){
+      renderCampaignHistory();
+    })();
+
+    /* -------------- Expose for inline ------ */
+    window.downloadValidated = downloadValidated;
+    window.showTab = showTab;
+    window.downloadReport = downloadReport;
+  </script>
+</body>
+</html>
